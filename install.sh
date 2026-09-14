@@ -392,6 +392,7 @@ fi
 . "${SCRIPT_DIR}/run_optional.sh"
 . "${SCRIPT_DIR}/setup_path.sh"
 . "${SCRIPT_DIR}/setup_global_data_path.sh"
+. "${SCRIPT_DIR}/setup_desktop.sh"
 . "${SCRIPT_DIR}/setup_avahi.sh"
 . "${SCRIPT_DIR}/setup_wivrn_service.sh"
 . "${SCRIPT_DIR}/setup_frewall.sh"
@@ -405,6 +406,7 @@ if (( HOST_SETUP )); then
 	echo "==> configuring PATH, Avahi, WiVRn service, and firewall"
 	setup_path
 	setup_global_data_path
+	setup_desktop
 	if [[ -r "${HOME}/.profile" ]]; then
 		source "${HOME}/.profile"
 	fi

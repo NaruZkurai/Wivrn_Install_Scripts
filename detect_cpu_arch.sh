@@ -41,3 +41,24 @@ detect_cpu_target() {
 
 	printf 'native\n'
 }
+
+configure_cpu_flags() {
+	# Sanity-check that the chosen GCC/Clang actually knows this -march.
+	# If an -march is not supported by the compiler, fall back to native.
+	if [[ -n "$MARCH" && "$MARCH" != "native" ]]; then
+		CXX_BIN="${CXX:-c++}"
+		if ! echo 'int main(){}' | "$CXX_BIN" -march="$MARCH" -x c++ - -o /dev/null 2>/dev/null; then
+			echo "warning: ${CXX_BIN} does not support -march=${MARCH}, falling back to native" >&2
+			MARCH="native"
+			MTUNE="native"
+			TUNE_HUMAN="native (fallback: compiler lacks ${MARCH})"
+		fi
+	fi
+
+	CFLAGS_EXTRA="-O3"
+	CXXFLAGS_EXTRA="-O3"
+	if [[ -n "$MARCH" ]]; then
+		CFLAGS_EXTRA="${CFLAGS_EXTRA} -march=${MARCH} -mtune=${MTUNE} -fno-semantic-interposition"
+		CXXFLAGS_EXTRA="${CXXFLAGS_EXTRA} -march=${MARCH} -mtune=${MTUNE} -fno-semantic-interposition"
+	fi
+}

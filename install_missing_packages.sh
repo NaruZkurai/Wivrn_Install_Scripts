@@ -9,22 +9,23 @@ install_missing_packages() {
 	fi
 
 	if command -v yay >/dev/null 2>&1; then
-		echo "==> installing missing package: ${pkg_candidates[*]}"
-		if yay -S --needed --noconfirm "${pkg_candidates[@]}"; then
-			return 0
-		fi
+		for candidate in "${pkg_candidates[@]}"; do
+			echo "==> installing missing package: ${candidate}"
+			if yay -S --needed --noconfirm "$candidate"; then
+				return 0
+			fi
+		done
 		return 1
 	fi
 
 	if command -v pacman >/dev/null 2>&1; then
-		local pacman_candidates=()
 		for candidate in "${pkg_candidates[@]}"; do
-			pacman_candidates+=("${candidate##*/}")
+			local pacman_candidate="${candidate##*/}"
+			echo "==> installing missing package: ${pacman_candidate}"
+			if sudo pacman -S --needed --noconfirm "$pacman_candidate"; then
+				return 0
+			fi
 		done
-		echo "==> installing missing package: ${pacman_candidates[*]}"
-		if sudo pacman -S --needed --noconfirm "${pacman_candidates[@]}"; then
-			return 0
-		fi
 		return 1
 	fi
 

@@ -391,6 +391,9 @@ fi
 if (( HOST_SETUP )); then
 	echo "==> configuring PATH, Avahi, WiVRn service, and firewall"
 	setup_path
+	if [[ -r "${HOME}/.profile" ]]; then
+		source "${HOME}/.profile"
+	fi
 	setup_avahi
 	setup_wivrn_service
 	setup_firewall

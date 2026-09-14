@@ -5,7 +5,7 @@ install_missing_packages() {
 	shift || true
 	local pkg_candidates=("$@")
 	if ((${#pkg_candidates[@]} == 0)); then
-		pkg_candidates=("$(arch_package_candidates "$pkg")")
+		mapfile -t pkg_candidates < <(arch_package_candidates "$pkg")
 	fi
 
 	if command -v yay >/dev/null 2>&1; then

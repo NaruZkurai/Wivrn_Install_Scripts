@@ -58,6 +58,8 @@ INSTALL_ONLY=0
 BUILD_ONLY=0
 REINSTALL=0
 WITH_MULTILIB=0
+REMOVE_PREFIX=""
+HOST_SETUP=1
 
 # --------------------------------------------------------------- arg parse ---
 usage() {
@@ -74,6 +76,8 @@ Options:
   --build-dir=<path> Build directory (default: <repo>/build-install)
   --build-type=<t>   CMAKE_BUILD_TYPE (default: Release)
   --jobs=<n>         Parallel build jobs (default: nproc)
+	--remove-prefix=<p> Remove the previous WiVRn installation after install
+	--no-host-setup    Skip PATH, service, Avahi, and firewall setup
   --no-lto           Disable interprocedural optimization / LTO
   --no-dashboard     Skip the Qt dashboard (server + wivrnctl only)
 	--multilib         Also build and install the 32-bit OpenXR server library
@@ -115,6 +119,8 @@ while (($#)); do
 		--build-dir=*)  BUILD_DIR="${arg#*=}"; shift ;;
 		--build-type=*) BUILD_TYPE="${arg#*=}"; shift ;;
 		--jobs=*|-j*)   JOBS="${arg#*=}"; shift ;;
+		--remove-prefix=*) REMOVE_PREFIX="${arg#*=}"; shift ;;
+		--no-host-setup) HOST_SETUP=0; shift ;;
 		--no-lto)       LTO=0; shift ;;
 		--no-dashboard) WITH_DASHBOARD=0; shift ;;
 		--multilib)     WITH_MULTILIB=1; shift ;;
@@ -376,12 +382,21 @@ fi
 . "${SCRIPT_DIR}/setup_avahi.sh"
 . "${SCRIPT_DIR}/setup_wivrn_service.sh"
 . "${SCRIPT_DIR}/setup_frewall.sh"
+. "${SCRIPT_DIR}/remove_installation.sh"
 
-echo "==> configuring PATH, Avahi, WiVRn service, and firewall"
-setup_path
-setup_avahi
-setup_wivrn_service
-setup_firewall
+if [[ -n "$REMOVE_PREFIX" ]]; then
+	remove_installation "$REMOVE_PREFIX"
+fi
+
+if (( HOST_SETUP )); then
+	echo "==> configuring PATH, Avahi, WiVRn service, and firewall"
+	setup_path
+	setup_avahi
+	setup_wivrn_service
+	setup_firewall
+else
+	echo "==> skipping PATH, Avahi, WiVRn service, and firewall setup"
+fi
 
 # --------------------------------------------------------------- finish ------
 cat <<EOF
@@ -389,8 +404,11 @@ cat <<EOF
 ==> Done.
 
 Binaries : ${BIN_DIR}/wivrn-server, ${BIN_DIR}/wivrn-dashboard
-Runtime  : OpenXR manifest + systemd user unit (wivrn) were installed.
-
-Setup     : PATH, Avahi, WiVRn user service, and firewall were configured.
+Runtime  : OpenXR manifest was installed.
+$(if (( HOST_SETUP )); then
+	printf 'Setup    : PATH, Avahi, WiVRn user service, and firewall were configured.\n'
+else
+	printf 'Setup    : host setup was skipped.\n'
+fi)
 Tuned for : ${TUNE_HUMAN}
 EOF

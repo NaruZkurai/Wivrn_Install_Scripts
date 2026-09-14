@@ -245,6 +245,17 @@ echo "==> cmake ${CMAKE_VER}, ninja, prefix: ${PREFIX}"
 if (( INSTALL_ONLY )); then
 	echo "==> skipping build (install-only mode)"
 else
+	if [[ -f "${BUILD_DIR}/CMakeCache.txt" ]]; then
+		CACHED_SOURCE="$(sed -n 's#^CMAKE_HOME_DIRECTORY:INTERNAL=##p' "${BUILD_DIR}/CMakeCache.txt")"
+		if [[ -n "${CACHED_SOURCE}" && "${CACHED_SOURCE}" != "${REPO_DIR}" ]]; then
+			STALE_BUILD_DIR="${BUILD_DIR}.stale-$(date +%Y%m%d-%H%M%S)"
+			while [[ -e "${STALE_BUILD_DIR}" ]]; do
+				STALE_BUILD_DIR="${BUILD_DIR}.stale-$(date +%Y%m%d-%H%M%S)-${RANDOM}"
+			done
+			echo "==> moving stale build tree for ${CACHED_SOURCE} to ${STALE_BUILD_DIR}"
+			mv -- "${BUILD_DIR}" "${STALE_BUILD_DIR}"
+		fi
+	fi
 	echo "==> configuring (${BUILD_TYPE}, cpu: ${TUNE_HUMAN})"
 
 CMAKE_ARGS=(

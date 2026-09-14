@@ -16,6 +16,7 @@ install_detected_dependencies() {
 	local dependency
 	local package_name
 	local dependencies=()
+	local packages=()
 
 	mapfile -t dependencies < <(
 		sed -nE \
@@ -32,9 +33,8 @@ install_detected_dependencies() {
 	for dependency in "${dependencies[@]}"; do
 		package_name="$(dependency_package_name "$dependency")"
 		echo "==> detected missing dependency: ${dependency} (package: ${package_name})" >&2
-		if ! install_missing_packages "$package_name"; then
-			echo "error: dependency '${dependency}' could not be installed" >&2
-			return 1
-		fi
+		packages+=("$package_name")
 	done
+
+	install_missing_packages "${packages[@]}"
 }

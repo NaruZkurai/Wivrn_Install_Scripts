@@ -20,9 +20,8 @@ install_missing_packages() {
 
 	if command -v pacman >/dev/null 2>&1; then
 		for candidate in "${pkg_candidates[@]}"; do
-			local pacman_candidate="${candidate##*/}"
-			echo "==> installing missing package: ${pacman_candidate}"
-			if sudo pacman -S --needed --noconfirm "$pacman_candidate"; then
+			echo "==> installing missing package: ${candidate}"
+			if sudo pacman -S --needed --noconfirm "$candidate"; then
 				return 0
 			fi
 		done

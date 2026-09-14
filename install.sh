@@ -234,10 +234,6 @@ fi
 CMAKE_VER="$(cmake --version | head -n1 | awk '{print $3}')"
 echo "==> cmake ${CMAKE_VER}, ninja, prefix: ${PREFIX}"
 
-if (( !INSTALL_ONLY )); then
-	check_dependencies
-fi
-
 # ------------------------------------------------------------- configure -----
 if (( INSTALL_ONLY )); then
 	echo "==> skipping build (install-only mode)"
@@ -278,10 +274,23 @@ else
 	CMAKE_ARGS+=(-DWIVRN_BUILD_DASHBOARD=OFF)
 fi
 
-if ! cmake "${CMAKE_ARGS[@]}"; then
-	echo "error: CMake configuration failed" >&2
-	exit 1
-fi
+CONFIGURE_LOG="${BUILD_DIR}/configure.log"
+CONFIGURE_ATTEMPT=0
+while true; do
+	if cmake "${CMAKE_ARGS[@]}" 2>&1 | tee "$CONFIGURE_LOG"; then
+		break
+	fi
+
+	((CONFIGURE_ATTEMPT += 1))
+	if (( CONFIGURE_ATTEMPT > 10 )); then
+		echo "error: CMake configuration failed after 10 dependency attempts" >&2
+		exit 1
+	fi
+	if ! install_detected_dependencies "$CONFIGURE_LOG"; then
+		exit 1
+	fi
+	echo "==> retrying configure after installing detected dependencies"
+done
 
 # ---------------------------------------------------------------- build ------
 echo "==> building with ${JOBS} job(s)"

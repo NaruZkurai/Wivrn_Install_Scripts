@@ -1,5 +1,11 @@
 #!/bin/bash
 
+package_is_installed() {
+	local candidate="$1"
+	local package_name="${candidate##*/}"
+	command -v pacman >/dev/null 2>&1 && pacman -Q "$package_name" >/dev/null 2>&1
+}
+
 install_missing_packages() {
 	local pkg="$1"
 	shift || true
@@ -11,7 +17,7 @@ install_missing_packages() {
 	if command -v yay >/dev/null 2>&1; then
 		for candidate in "${pkg_candidates[@]}"; do
 			echo "==> installing missing package: ${candidate}"
-			if yay -S --needed --noconfirm "$candidate"; then
+				if yay -S --needed --noconfirm "$candidate" && package_is_installed "$candidate"; then
 				return 0
 			fi
 		done

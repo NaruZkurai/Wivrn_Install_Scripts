@@ -41,6 +41,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 . "${SCRIPT_DIR}/detect_cpu_arch.sh"
+. "${SCRIPT_DIR}/arch_package_candidates.sh"
+. "${SCRIPT_DIR}/install_missing_packages.sh"
+. "${SCRIPT_DIR}/ensure_tool.sh"
 BUILD_DIR="${REPO_DIR}/build-install"
 BUILD_TYPE="Release"
 PREFIX="${HOME}/.local"
@@ -179,89 +182,6 @@ esac
 configure_cpu_flags
 
 # ------------------------------------------------------------ preflight ------
-arch_package_candidates() {
-	local pkg="$1"
-	local cpu_family=""
-	local vart=""
-	local candidates=()
-
-	if [[ -r /proc/cpuinfo ]]; then
-		cpu_family="$(awk -F': ' '/^cpu family/{print $2; exit}' /proc/cpuinfo)"
-		if [[ "$cpu_family" == "25" ]]; then
-			vart="znver4"
-		elif [[ "$cpu_family" == "26" ]]; then
-			vart="znver4"
-		fi
-	fi
-
-	if [[ -z "$vart" ]]; then
-		if [[ -r /proc/cpuinfo ]]; then
-			if awk -F': ' '/^model name/{print $2}' /proc/cpuinfo | grep -qi 'znver3'; then
-				vart="znver3"
-			fi
-		fi
-	fi
-
-	case "$pkg" in
-		boost)
-			if [[ -n "$vart" ]]; then
-				candidates+=("cachyos-extra-${vart}/boost" "cachyos-extra-${vart}/boost-libs")
-			fi
-			candidates+=("cachyos-extra/boost" "cachyos-extra/boost-libs" "extra/boost" "boost")
-			candidates+=("boost-libs")
-			;;
-		*)
-			candidates+=("$pkg")
-			;;
-	esac
-
-	printf '%s\n' "${candidates[@]}"
-}
-
-install_missing_packages() {
-	local pkg="$1"
-	shift || true
-	local pkg_candidates=("$@")
-	if ((${#pkg_candidates[@]} == 0)); then
-		pkg_candidates=("$(arch_package_candidates "$pkg")")
-	fi
-
-	if command -v yay >/dev/null 2>&1; then
-		echo "==> installing missing package: ${pkg_candidates[*]}"
-		if yay -S --needed --noconfirm "${pkg_candidates[@]}"; then
-			return 0
-		fi
-		return 1
-	fi
-
-	if command -v pacman >/dev/null 2>&1; then
-		local pacman_candidates=()
-		for candidate in "${pkg_candidates[@]}"; do
-			pacman_candidates+=("${candidate##*/}")
-		done
-		echo "==> installing missing package: ${pacman_candidates[*]}"
-		if sudo pacman -S --needed --noconfirm "${pacman_candidates[@]}"; then
-			return 0
-		fi
-		return 1
-	fi
-
-	return 1
-}
-
-ensure_tool() {
-	local tool="$1"
-	local pkg_name="$2"
-	shift 2 || true
-	if command -v "$tool" >/dev/null 2>&1; then
-		return 0
-	fi
-	if install_missing_packages "$pkg_name" "$@"; then
-		return 0
-	fi
-	return 1
-}
-
 need() {
 	command -v "$1" >/dev/null 2>&1 || MISSING+=("$1")
 }
@@ -354,18 +274,8 @@ else
 fi
 
 if ! cmake "${CMAKE_ARGS[@]}"; then
-	if [[ -f /etc/os-release ]] && grep -qiE 'arch|cachyos' /etc/os-release 2>/dev/null; then
-		if install_missing_packages boost; then
-			echo "==> retrying configure after installing Boost"
-			cmake "${CMAKE_ARGS[@]}"
-		else
-			echo "error: Boost is missing and could not be installed automatically" >&2
-			exit 1
-		fi
-	else
-		echo "error: CMake configuration failed" >&2
-		exit 1
-	fi
+	echo "error: CMake configuration failed" >&2
+	exit 1
 fi
 
 # ---------------------------------------------------------------- build ------

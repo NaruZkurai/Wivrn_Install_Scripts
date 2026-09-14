@@ -44,6 +44,7 @@ REPO_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 . "${SCRIPT_DIR}/arch_package_candidates.sh"
 . "${SCRIPT_DIR}/install_missing_packages.sh"
 . "${SCRIPT_DIR}/ensure_tool.sh"
+. "${SCRIPT_DIR}/check_dependencies.sh"
 BUILD_DIR="${REPO_DIR}/build-install"
 BUILD_TYPE="Release"
 PREFIX="${HOME}/.local"
@@ -232,6 +233,10 @@ fi
 
 CMAKE_VER="$(cmake --version | head -n1 | awk '{print $3}')"
 echo "==> cmake ${CMAKE_VER}, ninja, prefix: ${PREFIX}"
+
+if (( !INSTALL_ONLY )); then
+	check_dependencies
+fi
 
 # ------------------------------------------------------------- configure -----
 if (( INSTALL_ONLY )); then

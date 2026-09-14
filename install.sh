@@ -256,6 +256,7 @@ else
 			mv -- "${BUILD_DIR}" "${STALE_BUILD_DIR}"
 		fi
 	fi
+		mkdir -p -- "${BUILD_DIR}"
 	echo "==> configuring (${BUILD_TYPE}, cpu: ${TUNE_HUMAN})"
 
 CMAKE_ARGS=(

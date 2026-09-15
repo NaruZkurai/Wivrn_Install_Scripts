@@ -37,6 +37,9 @@ dependency_package_name() {
 			eigen3)
 			printf '%s\n' 'eigen'
 			;;
+				nlohmann_json)
+					printf '%s\n' 'nlohmann-json'
+					;;
 			gdbus_codegen|gdbus-codegen)
 			printf '%s\n' 'glib2-devel'
 			;;
@@ -56,7 +59,7 @@ install_detected_dependencies() {
 	mapfile -t dependencies < <(
 		sed -nE \
 			-e 's/.*Could NOT find ([A-Za-z0-9_.+-]+).*/\1/p' \
-			-e 's/.*Could not find ([A-Za-z0-9_.+-]+).*/\1/p' \
+			-e 's/.*Could not find ([A-Z][A-Z0-9_.+-]*) using.*/\1/p' \
 			-e 's/.*provided by "([^"]+)".*/\1/p' \
 			"$configure_log" | awk '!seen[$0]++'
 	)

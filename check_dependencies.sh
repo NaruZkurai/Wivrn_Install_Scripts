@@ -35,7 +35,7 @@ dependency_package_name() {
 		printf '%s\n' 'pipewire'
 		;;
 			gdbus_codegen|gdbus-codegen)
-			printf '%s\n' 'glib2'
+			printf '%s\n' 'glib2-devel'
 			;;
 		*)
 		printf '%s\n' "$name"

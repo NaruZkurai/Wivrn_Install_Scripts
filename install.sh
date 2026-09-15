@@ -223,7 +223,7 @@ if ((${#MISSING[@]})); then
 				ninja) ensure_tool ninja ninja || true ;;
 				pkg-config) ensure_tool pkg-config pkgconf pkg-config || true ;;
 				cc|c++) ensure_tool c++ gcc || true ;;
-				gdbus-codegen) ensure_tool gdbus-codegen glib2 || true ;;
+				gdbus-codegen) ensure_tool gdbus-codegen glib2-devel || true ;;
 				qmake6|qtpaths6) ensure_tool qmake6 qt6-base qt6-tools || true ;;
 			esac
 		done

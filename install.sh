@@ -202,6 +202,7 @@ if (( !INSTALL_ONLY )); then
 	need pkg-config
 	need cc
 	need c++
+	need gdbus-codegen
 	if (( WITH_DASHBOARD )); then
 		need qmake6 || need qtpaths6 || true
 	fi
@@ -222,10 +223,11 @@ if ((${#MISSING[@]})); then
 				ninja) ensure_tool ninja ninja || true ;;
 				pkg-config) ensure_tool pkg-config pkgconf pkg-config || true ;;
 				cc|c++) ensure_tool c++ gcc || true ;;
+				gdbus-codegen) ensure_tool gdbus-codegen glib2 || true ;;
 				qmake6|qtpaths6) ensure_tool qmake6 qt6-base qt6-tools || true ;;
 			esac
 		done
-		for tool in cmake ninja pkg-config cc c++; do
+		for tool in cmake ninja pkg-config cc c++ gdbus-codegen; do
 			if ! command -v "$tool" >/dev/null 2>&1; then
 				echo "error: missing required tool '$tool' after attempted install" >&2
 				exit 1

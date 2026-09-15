@@ -34,6 +34,9 @@ dependency_package_name() {
 		libpipewire)
 		printf '%s\n' 'pipewire'
 		;;
+			gdbus_codegen|gdbus-codegen)
+			printf '%s\n' 'glib2'
+			;;
 		*)
 		printf '%s\n' "$name"
 			;;
@@ -50,6 +53,7 @@ install_detected_dependencies() {
 	mapfile -t dependencies < <(
 		sed -nE \
 			-e 's/.*Could NOT find ([A-Za-z0-9_.+-]+).*/\1/p' \
+			-e 's/.*Could not find ([A-Za-z0-9_.+-]+).*/\1/p' \
 			-e 's/.*provided by "([^"]+)".*/\1/p' \
 			"$configure_log" | awk '!seen[$0]++'
 	)

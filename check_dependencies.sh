@@ -34,6 +34,9 @@ dependency_package_name() {
 		libpipewire)
 		printf '%s\n' 'pipewire'
 		;;
+			eigen3)
+			printf '%s\n' 'eigen'
+			;;
 			gdbus_codegen|gdbus-codegen)
 			printf '%s\n' 'glib2-devel'
 			;;

@@ -241,6 +241,13 @@ fi
 CMAKE_VER="$(cmake --version | head -n1 | awk '{print $3}')"
 echo "==> cmake ${CMAKE_VER}, ninja, prefix: ${PREFIX}"
 
+# find_package(Vulkan REQUIRED) at CMakeLists.txt:109 aborts configure with
+# "Could NOT find Vulkan (missing: Vulkan_INCLUDE_DIR)" when the headers are
+# absent. Check and fix that here so the build does not fail confusingly.
+if (( !INSTALL_ONLY )); then
+	ensure_vulkan_headers || exit 1
+fi
+
 # ------------------------------------------------------------- configure -----
 if (( INSTALL_ONLY )); then
 	echo "==> skipping build (install-only mode)"
@@ -317,6 +324,19 @@ cmake --build "$BUILD_DIR" --parallel "$JOBS"
 
 if (( WITH_MULTILIB )); then
 	echo "==> configuring 32-bit OpenXR server library"
+	# The 32-bit build needs the multilib Vulkan loader. lib32-vulkan-icd-loader
+	# provides /usr/lib32/libvulkan.so; without it the link fails.
+	if [[ ! -e /usr/lib32/libvulkan.so ]]; then
+		echo "==> 32-bit Vulkan loader missing at /usr/lib32/libvulkan.so" >&2
+		if command -v pacman >/dev/null 2>&1 || command -v yay >/dev/null 2>&1; then
+			install_missing_packages --alternatives lib32-vulkan-icd-loader lib32-vulkan-icd-loader || true
+		fi
+	fi
+	if [[ ! -e /usr/lib32/libvulkan.so ]]; then
+		echo "error: 32-bit Vulkan loader is required for --multilib" >&2
+		echo "       install lib32-vulkan-icd-loader and retry" >&2
+		exit 1
+	fi
 	MULTILIB_BUILD_DIR="${BUILD_DIR}-32"
 	MULTILIB_PKG_CONFIG_PATH="/usr/lib32/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
 	MULTILIB_CMAKE_ARGS=(

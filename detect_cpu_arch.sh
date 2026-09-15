@@ -23,9 +23,10 @@ detect_cpu_target() {
 
 	if [[ "$vendor" == "AuthenticAMD" ]]; then
 		# Family 0x19 (25) = Zen 3 / Zen 4 family.
-		# Model >= 0x10 on family 25 is Zen 4; below is Zen 3.
+		# Ryzen 7000 Zen 4 desktop parts report models 0x60+; models such as
+		# 0x21 used by the Ryzen 7 5700X3D are Zen 3.
 		if [[ "$family" == "25" ]]; then
-			if [[ -n "$model" && "$model" -ge 16 ]] 2>/dev/null; then
+			if [[ -n "$model" && "$model" -ge 96 ]] 2>/dev/null; then
 				printf 'znver4\n'
 				return
 			fi
